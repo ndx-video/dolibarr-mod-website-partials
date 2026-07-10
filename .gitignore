@@ -1,0 +1,13 @@
+# Local secrets for the module-dev Docker stack
+dev/.env
+
+# Local Dolibarr core copy for Intelephense (from partials-dolibarr container)
+dev/.cache/
+
+# OS / editor noise
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/*
+!.vscode/settings.json

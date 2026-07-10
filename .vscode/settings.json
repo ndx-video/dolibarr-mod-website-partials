@@ -1,0 +1,7 @@
+{
+  "intelephense.environment.includePaths": [
+    "${workspaceFolder}/dev/.cache/dolibarr-htdocs",
+    "${workspaceFolder}/dev/phpstubs"
+  ],
+  "intelephense.files.maxSize": 5000000
+}
