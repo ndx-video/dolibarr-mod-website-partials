@@ -1,0 +1,47 @@
+# Translation file — websitepartials
+
+#
+# Generic
+#
+
+# Module label 'ModuleWebsitePartialsName'
+ModuleWebsitePartialsName = Website Partials
+# Module description 'ModuleWebsitePartialsDesc'
+ModuleWebsitePartialsDesc = Publish Website CMS containers as HTTPS HTML/JSON content islands
+WebsitePartialsDescription = Publish Website CMS containers as HTTPS HTML/JSON content islands for headless front ends
+
+#
+# Permissions (shown under Users → Permissions)
+#
+PermissionReadWebsitesSites = Read websites (sites)
+PermissionWriteWebsitesSites = Create/modify websites (sites)
+PermissionDeleteWebsitesSites = Delete websites (sites)
+
+#
+# Setup page
+#
+WebsitePartialsSetup = Website Partials setup
+WebsitePartialsSetupPage = Configure public partials defaults, public-path IP allowlisting, and consumer jump links. REST API IP filtering uses the global Web Services API setting (exact IPs only).
+Settings = Settings
+WebsitePartialsSectionAccess = Access control
+WebsitePartialsSectionPublic = Public partials
+WebsitePartialsSectionConsumers = Consumer sites
+
+WEBSITEPARTIALS_API_IP_INFO = REST API IP restriction
+WEBSITEPARTIALS_API_IP_NOTE = REST endpoints under /api/index.php/websitepartials/ are gated by Dolibarr's global API_RESTRICT_ON_IP (exact IPs, space-separated — no CIDR). Configure it here:
+WEBSITEPARTIALS_API_IP_LINK = Web Services / API setup
+WEBSITEPARTIALS_API_IP_CURRENT = Current API_RESTRICT_ON_IP
+WEBSITEPARTIALS_API_IP_CURRENT_EMPTY = Current API_RESTRICT_ON_IP is empty (all clients allowed for REST)
+
+WEBSITEPARTIALS_PUBLIC_ALLOWED_IPS = Public path allowed IPs / CIDR
+WEBSITEPARTIALS_PUBLIC_ALLOWED_IPSTooltip = Applied only to /custom/websitepartials/public/… (not REST). Space or newline separated. Examples: 100.92.27.75 192.168.10.0/24. Empty = allow all.
+
+WEBSITEPARTIALS_DEFAULT_WEBSITE_REF = Default website ref
+WEBSITEPARTIALS_DEFAULT_WEBSITE_REFTooltip = Default Dolibarr Website CMS ref used for public islands and docs (e.g. main-website).
+
+WEBSITEPARTIALS_CACHE_CONTROL = Public Cache-Control header
+WEBSITEPARTIALS_CACHE_CONTROLTooltip = Sent on successful public .html/.json responses. Example: public, max-age=60, stale-while-revalidate=300
+
+WEBSITEPARTIALS_CONSUMER_URLS = Consumer site URLs
+WEBSITEPARTIALS_CONSUMER_URLSTooltip = One https:// URL per line. Convenience jump links on this page only — not used for CORS or security.
+WEBSITEPARTIALS_CONSUMER_JUMPS = Open consumer sites
