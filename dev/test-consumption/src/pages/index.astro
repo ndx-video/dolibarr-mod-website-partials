@@ -1,0 +1,67 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getConfig, publicPartialsBase, restBase } from '../lib/config';
+import { getStatus } from '../lib/rest-client';
+
+const config = getConfig();
+const status = config.apiKey ? await getStatus(config) : null;
+---
+
+<BaseLayout title="Hub · websitepartials test-consumption">
+  <h2 style="margin-top:0">Module consumption harness</h2>
+  <p class="muted">
+    Exercises REST (DOLAPIKEY) and public partials against the local Dolibarr module-dev stack.
+  </p>
+
+  <section class="card">
+    <h3 style="margin-top:0">Environment</h3>
+    <dl class="mono" style="display:grid;grid-template-columns:12rem 1fr;gap:0.35rem 0.75rem;margin:0">
+      <dt class="muted">PARTIALS_BASE_URL</dt>
+      <dd style="margin:0">{config.baseUrl}</dd>
+      <dt class="muted">REST</dt>
+      <dd style="margin:0">{restBase(config)}</dd>
+      <dt class="muted">Public partials</dt>
+      <dd style="margin:0">{publicPartialsBase(config)}</dd>
+      <dt class="muted">WEBSITE_REF</dt>
+      <dd style="margin:0">{config.websiteRef}</dd>
+      <dt class="muted">PUBLIC_WEBSITE_REF / slug</dt>
+      <dd style="margin:0">{config.publicWebsiteRef} / {config.publicSlug}</dd>
+      <dt class="muted">DOLAPIKEY</dt>
+      <dd style="margin:0">{config.apiKey ? 'set' : 'missing — set in .env'}</dd>
+    </dl>
+  </section>
+
+  <section class="card">
+    <h3 style="margin-top:0">Quick health</h3>
+    {
+      !config.apiKey ? (
+        <p class="muted">Skip — no DOLAPIKEY.</p>
+      ) : status?.ok && status.data ? (
+        <p>
+          <span class="badge pass">ok</span>
+          <span class="mono">
+            {' '}
+            {status.data.module} · Dolibarr {status.data.dolibarr_version} · db_ok=
+            {String(status.data.db_ok)}
+          </span>
+        </p>
+      ) : (
+        <p>
+          <span class="badge fail">fail</span>
+          <span class="mono">
+            {' '}
+            HTTP {status?.status ?? 0} {status?.error || status?.raw}
+          </span>
+        </p>
+      )
+    }
+  </section>
+
+  <section class="card">
+    <h3 style="margin-top:0">Pages</h3>
+    <div class="row">
+      <a class="button" href="/harness">Open harness</a>
+      <a class="button secondary" href="/demo">Island demo</a>
+    </div>
+  </section>
+</BaseLayout>

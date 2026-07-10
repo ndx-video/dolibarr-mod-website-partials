@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import IslandPreview from '../components/IslandPreview.astro';
+import { getConfig, publicPartialsBase } from '../lib/config';
+import { fetchPublicPartial } from '../lib/public-client';
+
+const config = getConfig();
+const ref = config.publicWebsiteRef;
+const slug = config.publicSlug;
+const base = publicPartialsBase(config);
+const jsonUrl = `${base}/${ref}/${slug}.json`;
+const htmlUrl = `${base}/${ref}/${slug}.html`;
+
+const response = await fetchPublicPartial(ref, slug, 'json', config);
+const island = response.ok ? response.json : null;
+const error = response.ok
+  ? undefined
+  : response.error ||
+    `Public island HTTP ${response.status} for ${ref}/${slug}.json`;
+---
+
+<BaseLayout title="Island demo · websitepartials">
+  <h2 style="margin-top:0">Island demo</h2>
+  <p class="muted">
+    P3-shaped consumer: fetch public <span class="mono">.json</span> and render
+    <span class="mono">body</span> as trusted HTML.
+  </p>
+
+  <section class="card">
+    <p class="mono muted" style="margin:0">
+      GET {jsonUrl}
+    </p>
+  </section>
+
+  <IslandPreview island={island} error={error} jsonUrl={jsonUrl} htmlUrl={htmlUrl} />
+
+  <section class="card">
+    <h3 style="margin-top:0">Notes</h3>
+    <ul class="muted">
+      <li>
+        Default target is <span class="mono">{ref}/{slug}</span> via
+        <span class="mono">PUBLIC_WEBSITE_REF</span> / <span class="mono">PUBLIC_SLUG</span>.
+      </li>
+      <li>
+        Use the harness <strong>Seed fixtures</strong> action if you want islands on
+        <span class="mono">{config.websiteRef}</span> instead — then point env at that ref.
+      </li>
+      <li>Drafts never appear on this path (404).</li>
+    </ul>
+  </section>
+</BaseLayout>

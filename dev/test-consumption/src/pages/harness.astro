@@ -1,0 +1,118 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Harness · websitepartials">
+  <h2 style="margin-top:0">API harness</h2>
+  <p class="muted">
+    Runs REST CRUD and public island checks server-side so DOLAPIKEY never reaches the browser.
+  </p>
+
+  <section class="card">
+    <div class="row">
+      <button type="button" id="run-suite">Run all tests</button>
+      <button type="button" class="secondary" id="seed-fixtures">Seed fixtures</button>
+      <span id="run-status" class="muted"></span>
+    </div>
+    <div id="summary" class="summary" style="margin-top:0.75rem"></div>
+  </section>
+
+  <div id="results"></div>
+
+  <template id="result-template">
+    <article class="result">
+      <header>
+        <span class="badge"></span>
+        <h3></h3>
+        <span class="muted mono group"></span>
+        <span class="muted mono http"></span>
+        <span class="muted mono dur"></span>
+      </header>
+      <p class="muted detail" style="margin:0"></p>
+      <pre class="dump body" style="margin-top:0.5rem;display:none"></pre>
+    </article>
+  </template>
+</BaseLayout>
+
+<script>
+  const runBtn = document.getElementById('run-suite');
+  const seedBtn = document.getElementById('seed-fixtures');
+  const statusEl = document.getElementById('run-status');
+  const summaryEl = document.getElementById('summary');
+  const resultsEl = document.getElementById('results');
+  const tpl = document.getElementById('result-template');
+
+  function renderReport(report) {
+    if (!resultsEl || !summaryEl || !tpl) return;
+    resultsEl.innerHTML = '';
+    summaryEl.innerHTML = `
+      <span class="pass">pass ${report.summary.pass}</span>
+      <span class="fail">fail ${report.summary.fail}</span>
+      <span class="muted">skip ${report.summary.skip}</span>
+    `;
+    for (const r of report.results) {
+      const node = tpl.content.cloneNode(true);
+      const article = node.querySelector('.result');
+      article.classList.add(r.status);
+      const badge = node.querySelector('.badge');
+      badge.textContent = r.status;
+      badge.classList.add(r.status);
+      node.querySelector('h3').textContent = r.name;
+      node.querySelector('.group').textContent = r.group;
+      node.querySelector('.http').textContent =
+        r.httpStatus != null ? `HTTP ${r.httpStatus}` : '';
+      node.querySelector('.dur').textContent = `${r.durationMs}ms`;
+      node.querySelector('.detail').textContent = r.detail;
+      const body = node.querySelector('.body');
+      if (r.bodyPreview) {
+        body.style.display = 'block';
+        body.textContent = r.bodyPreview;
+      }
+      resultsEl.appendChild(node);
+    }
+  }
+
+  async function post(path) {
+    const res = await fetch(path, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
+  }
+
+  runBtn?.addEventListener('click', async () => {
+    runBtn.disabled = true;
+    seedBtn && (seedBtn.disabled = true);
+    if (statusEl) statusEl.textContent = 'Running…';
+    try {
+      const report = await post('/api/run-suite');
+      renderReport(report);
+      if (statusEl) {
+        statusEl.textContent = `Finished ${report.finishedAt}`;
+      }
+    } catch (err) {
+      if (statusEl) statusEl.textContent = err instanceof Error ? err.message : String(err);
+    } finally {
+      runBtn.disabled = false;
+      seedBtn && (seedBtn.disabled = false);
+    }
+  });
+
+  seedBtn?.addEventListener('click', async () => {
+    seedBtn.disabled = true;
+    runBtn && (runBtn.disabled = true);
+    if (statusEl) statusEl.textContent = 'Seeding…';
+    try {
+      const data = await post('/api/seed');
+      if (statusEl) {
+        statusEl.textContent = data.ok
+          ? `Seeded ${data.ref} (${data.pages?.length ?? 0} pages)`
+          : data.error || 'Seed failed';
+      }
+    } catch (err) {
+      if (statusEl) statusEl.textContent = err instanceof Error ? err.message : String(err);
+    } finally {
+      seedBtn.disabled = false;
+      runBtn && (runBtn.disabled = false);
+    }
+  });
+</script>

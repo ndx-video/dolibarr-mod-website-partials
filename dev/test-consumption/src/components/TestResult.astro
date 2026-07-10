@@ -1,0 +1,25 @@
+---
+import type { TestResult } from '../lib/types';
+
+interface Props {
+  result: TestResult;
+}
+
+const { result } = Astro.props;
+---
+
+<article class={`result ${result.status}`}>
+  <header>
+    <span class={`badge ${result.status}`}>{result.status}</span>
+    <h3>{result.name}</h3>
+    <span class="muted mono">{result.group}</span>
+    {result.httpStatus != null && (
+      <span class="muted mono">HTTP {result.httpStatus}</span>
+    )}
+    <span class="muted mono">{result.durationMs}ms</span>
+  </header>
+  <p class="muted" style="margin:0">{result.detail}</p>
+  {result.bodyPreview && (
+    <pre class="dump" style="margin-top:0.5rem">{result.bodyPreview}</pre>
+  )}
+</article>

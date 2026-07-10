@@ -1,0 +1,52 @@
+---
+import type { PublicIsland } from '../lib/types';
+
+interface Props {
+  island: PublicIsland | null;
+  error?: string;
+  htmlUrl?: string;
+  jsonUrl?: string;
+}
+
+const { island, error, htmlUrl, jsonUrl } = Astro.props;
+---
+
+<section class="card">
+  {
+    error ? (
+      <div>
+        <span class="badge fail">fallback</span>
+        <h2 style="margin:0.5rem 0 0.25rem">Island unavailable</h2>
+        <p class="muted">{error}</p>
+        <p>Placeholder copy would appear here in production when the origin is down.</p>
+      </div>
+    ) : island ? (
+      <div>
+        <p class="muted mono" style="margin:0">
+          {island.slug}
+          {island.updatedAt ? ` · updated ${island.updatedAt}` : ''}
+        </p>
+        <h2 style="margin:0.35rem 0 0.5rem">{island.title}</h2>
+        <div class="island-body" set:html={island.body} />
+      </div>
+    ) : (
+      <p class="muted">No island loaded.</p>
+    )
+  }
+  {
+    (htmlUrl || jsonUrl) && (
+      <p class="row" style="margin-top:1rem;margin-bottom:0">
+        {jsonUrl && (
+          <a class="button secondary" href={jsonUrl} target="_blank" rel="noreferrer">
+            Raw .json
+          </a>
+        )}
+        {htmlUrl && (
+          <a class="button secondary" href={htmlUrl} target="_blank" rel="noreferrer">
+            Raw .html
+          </a>
+        )}
+      </p>
+    )
+  }
+</section>
