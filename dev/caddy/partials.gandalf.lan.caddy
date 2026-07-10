@@ -1,0 +1,19 @@
+# Reference fragment — paste into /opt/caddy/Caddyfile (or merge by import).
+# Upstream hostname must match Compose `hostname:` on the dolibarr service.
+#
+# Pretty public URLs rewrite onto partial.php PATH_INFO (stock Apache has no mod_rewrite):
+#   /custom/websitepartials/public/partials/{ref}/{slug}.json
+#     → /custom/websitepartials/public/partial.php/partials/{ref}/{slug}.json
+
+partials.gandalf.lan:80 {
+	@websitepartials path /custom/websitepartials/public/partials/*
+	rewrite @websitepartials /custom/websitepartials/public/partial.php{uri}
+	reverse_proxy http://partials-dolibarr:80
+}
+
+partials.gandalf.lan:443 {
+	@websitepartials path /custom/websitepartials/public/partials/*
+	rewrite @websitepartials /custom/websitepartials/public/partial.php{uri}
+	reverse_proxy http://partials-dolibarr:80
+	tls internal
+}

@@ -1,0 +1,62 @@
+# Module-dev Dolibarr 22 for website-partials.
+# Behind Caddy on gandalf_proxy — no host ports.
+# URL: https://partials.gandalf.lan
+services:
+  db:
+    image: postgres:16
+    container_name: partials-db
+    hostname: partials-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dolibarr_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_database_app_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-dolibarr}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - partials-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  dolibarr:
+    image: dolibarr/dolibarr:22.0.0
+    container_name: partials-dolibarr
+    hostname: partials-dolibarr
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DOLI_DB_HOST: db
+      DOLI_DB_HOST_PORT: "5432"
+      DOLI_DB_NAME: ${POSTGRES_DB:-dolibarr}
+      DOLI_DB_USER: ${POSTGRES_USER:-dolibarr_user}
+      DOLI_DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme_database_app_pass}
+      DOLI_DB_TYPE: pgsql
+      DOLI_URL_ROOT: ${DOLI_URL_ROOT:-https://partials.gandalf.lan}
+      DOLI_ADMIN_LOGIN: ${DOLI_ADMIN_LOGIN:-admin}
+      DOLI_ADMIN_PASSWORD: ${DOLI_ADMIN_PASSWORD:-admin_pass_change_me}
+      DOLI_INIT_DEMO: "0"
+      WWW_USER_ID: "33"
+      WWW_GROUP_ID: "33"
+    volumes:
+      - dolibarr_documents:/var/www/documents
+      - ../htdocs/custom/websitepartials:/var/www/html/custom/websitepartials
+      - ./install.forced.php:/var/www/html/install/install.forced.php:ro
+    networks:
+      - partials-net
+      - gandalf_proxy
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  dolibarr_documents:
+
+networks:
+  gandalf_proxy:
+    external: true
+    name: gandalf_proxy
+  partials-net:
+    driver: bridge
