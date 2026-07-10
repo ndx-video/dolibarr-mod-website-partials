@@ -17,17 +17,15 @@ This repo ships the optional agent-harness layer:
 
 ### Milestone numbering vs ROADMAP labels
 
-[ROADMAP.md](ROADMAP.md) uses **P0–P4**. Dot Progress filenames use **`M000`–`M004`**:
+[ROADMAP.md](ROADMAP.md) covers **P0–P2** (complete at **v1.0**). Dot Progress filenames use **`M000`–`M002`**:
 
 | ROADMAP | Progress filename prefix | Frontmatter `milestone` |
 |---------|--------------------------|-------------------------|
 | P0 — Spec & scaffold | `M000` | `P0 — Spec & scaffold` |
 | P1 — Public partials | `M001` | `P1 — Public partials` |
 | P2 — REST control plane | `M002` | `P2 — REST control plane` |
-| P3 — Astro wiring | `M003` | `P3 — Astro wiring` |
-| P4 — Hardening & runbook | `M004` | `P4 — Hardening & runbook` |
 
-P3 work that only changes the Astro consumer should be recorded in [cloudflare-worker-braypark](https://github.com/ndx-video/cloudflare-worker-braypark) `.progress/`; record module-side P3 prep here if any.
+Former P3/P4 (Astro wiring, production deploy, ops) live in [roadmap-handover.md](roadmap-handover.md) and should be planned/recorded in [cloudflare-worker-braypark](https://github.com/ndx-video/cloudflare-worker-braypark).
 
 ## Project context
 
@@ -35,13 +33,14 @@ Custom Dolibarr module that exposes Website CMS containers as HTTPS content isla
 
 | Area | Location |
 |------|----------|
-| Milestone plan | [ROADMAP.md](ROADMAP.md) |
+| Milestone plan (v1.0 complete) | [ROADMAP.md](ROADMAP.md) |
+| Consumer / ops handover | [roadmap-handover.md](roadmap-handover.md) |
 | Human docs | [README.md](README.md) |
-| Module code (target) | `htdocs/custom/websitepartials/` (scaffold at P0) |
-| Public router (target) | `public/partial.php` |
-| REST API (target) | `class/api_websitepartials.class.php` |
-| Shared fetch helpers (target) | `lib/websitepartials.lib.php` |
-| Descriptor (target) | `core/modules/modWebsitePartials.class.php` |
+| Module code | `htdocs/custom/websitepartials/` |
+| Public router | `public/partial.php` |
+| REST API | `class/api_websitepartials.class.php` |
+| Shared helpers | `lib/websitepartials.lib.php` |
+| Descriptor | `core/modules/modWebsitePartials.class.php` |
 
 ### Locked product decisions
 
@@ -84,6 +83,6 @@ Compose under `dev/` — Dolibarr 22 + Postgres on `gandalf_proxy`, no host port
 
 ## Working convention
 
-**Plan in [ROADMAP.md](ROADMAP.md). Record in [.progress/](.progress/).**
+**Module plan in [ROADMAP.md](ROADMAP.md) (v1.0 done). Consumer/ops in [roadmap-handover.md](roadmap-handover.md). Record module work in [.progress/](.progress/).**
 
-At the start of a milestone, load that milestone’s Done-when checklist and the latest `.progress/milestone/` entries for `M00n`.
+For further module changes, append a General or Fix progress entry (or a new milestone if a post-v1.0 roadmap phase is added).

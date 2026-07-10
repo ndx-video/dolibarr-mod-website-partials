@@ -6,7 +6,7 @@ Install path: `htdocs/custom/websitepartials/`
 
 ## Status
 
-Descriptor + **public `.html`/`.json` islands** + **DOLAPIKEY REST** (full site/container CRUD) + **admin setup page**. See repo [ROADMAP.md](../../../ROADMAP.md).
+**v1.0** — public `.html`/`.json` islands, DOLAPIKEY REST (full site/container CRUD), admin setup page. Repo [ROADMAP.md](../../../ROADMAP.md) is complete; consumer/ops: [roadmap-handover.md](../../../roadmap-handover.md).
 
 ## Dependencies
 
@@ -17,7 +17,7 @@ Descriptor + **public `.html`/`.json` islands** + **DOLAPIKEY REST** (full site/
 ## Enable
 
 1. Place this tree under `htdocs/custom/websitepartials/` (or use the repo `dev/` bind-mount).
-2. Version is `development` — set `MAIN_FEATURES_LEVEL` to `2`.
+2. Version is `1.0.0` (stable). Local `dev/scripts/up.sh` still sets `MAIN_FEATURES_LEVEL=2` for convenience.
 3. Enable via **Home → Setup → Modules**, or `./dev/scripts/up.sh` (calls `activateModule`, not SQL-only const flips).
 4. Grant API users rights under **Users → Permissions → Website Partials**.
 

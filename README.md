@@ -6,7 +6,14 @@ Volunteers author pages in the Website UI (`main-website`). This module publishe
 
 ## Status
 
-**P0–P2 done; P1 public partials live** — module under [`htdocs/custom/websitepartials/`](htdocs/custom/websitepartials/), enabled on `partials.gandalf.lan`. Local Astro harness: [`dev/test-consumption/`](dev/test-consumption/). See **[ROADMAP.md](ROADMAP.md)**.
+**v1.0 released** — module complete (roadmap **P0–P2**). Tagged `v1.0`.
+
+| | |
+|--|--|
+| Code | [`htdocs/custom/websitepartials/`](htdocs/custom/websitepartials/) |
+| Verified | `partials.gandalf.lan` + [`dev/test-consumption/`](dev/test-consumption/) |
+| Module plan | **[ROADMAP.md](ROADMAP.md)** (complete) |
+| Consumer / ops | **[roadmap-handover.md](roadmap-handover.md)** → Astro repo M1 |
 
 | Surface | Auth | Purpose |
 |---------|------|---------|
@@ -22,7 +29,7 @@ Default website ref: **`main-website`**. Slug = Dolibarr `pageurl`. Unpublished 
 htdocs/custom/websitepartials/
 ```
 
-Deploy onto the Bray Park Dolibarr host (`admin.braypark.church` / `api.braypark.church`).
+Deploy onto the Bray Park Dolibarr host (`admin.braypark.church` / `api.braypark.church`) — production enablement is covered in [roadmap-handover.md](roadmap-handover.md), not this module’s open roadmap.
 
 ## Local module-dev Dolibarr
 
@@ -49,15 +56,17 @@ For the Bray Park Sentinel portal stack, use [dolibarr-braypark](https://github.
 
 | Repo | Role |
 |------|------|
-| [cloudflare-worker-braypark](https://github.com/ndx-video/cloudflare-worker-braypark) | Astro consumer (M1 / P3 wiring) |
+| [cloudflare-worker-braypark](https://github.com/ndx-video/cloudflare-worker-braypark) | Astro consumer — wire islands via [roadmap-handover.md](roadmap-handover.md) / that repo’s M1 |
 | [dolibarr-braypark](https://github.com/ndx-video/dolibarr-braypark) | Local Sentinel + sealed Dolibarr stack |
 
-## Docs for agents
+## Docs
 
-- [AGENTS.md](AGENTS.md) — project context and conventions
-- [ROADMAP.md](ROADMAP.md) — what to build when
+- [ROADMAP.md](ROADMAP.md) — module milestones P0–P2 (**v1.0 complete**) and public/REST contracts
+- [roadmap-handover.md](roadmap-handover.md) — Astro wiring + production ops (former P3/P4)
+- [AGENTS.md](AGENTS.md) — agent orientation
 - [.progress/README.md](.progress/README.md) — append-only progress log (Dot Progress)
+- [htdocs/custom/websitepartials/README.md](htdocs/custom/websitepartials/README.md) — module install / API notes
 
 ## License
 
-See repository / module `LICENSE` when added. Website template content in Dolibarr may carry CC-BY-SA; this module’s own code license will be stated when the scaffold lands.
+GPL-3.0-or-later (see module [`COPYING`](htdocs/custom/websitepartials/COPYING)). Website template content in Dolibarr may carry CC-BY-SA.

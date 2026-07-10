@@ -66,8 +66,8 @@ class modWebsitePartials extends DolibarrModules
 		$this->editor_url = 'https://braypark.church';
 		$this->editor_squarred_logo = '';
 
-		// development | experimental | x.y.z — development needs MAIN_FEATURES_LEVEL >= 2
-		$this->version = 'development';
+		// x.y.z stable, or development | experimental (those need MAIN_FEATURES_LEVEL >= 2)
+		$this->version = '1.0.0';
 
 		// Key used in llx_const table to save module status enabled/disabled
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);

@@ -2,9 +2,21 @@
 
 Milestone plan for the **Dolibarr `website-partials` custom module**: surface HTML content islands from the Website CMS over HTTPS for the [braypark.church](https://braypark.church) Astro site.
 
-This file is the planning source of truth for **this repo**. Module PHP is built here and deployed onto the Dolibarr host (`admin.braypark.church` / `api.braypark.church`). The Astro site ([ndx-video/cloudflare-worker-braypark](https://github.com/ndx-video/cloudflare-worker-braypark)) is the **consumer** — see that repo’s `ROADMAP.md` M1 and `src/lib/content-api.ts`.
+This file is the planning source of truth for **this repo**. Module PHP lives here and is installed onto the Dolibarr host (`admin.braypark.church` / `api.braypark.church`).
 
-Progress on the module is recorded in [.progress/](.progress/) (Dot Progress). Consumer wiring progress lives in the Astro repo’s `.progress/`.
+Progress on the module is recorded in [.progress/](.progress/) (Dot Progress).
+
+## Status — v1.0
+
+**Module complete.** P0–P2 are done and verified on the local module-dev stack (`partials.gandalf.lan`) via [`dev/test-consumption/`](dev/test-consumption/). Tagged **`v1.0`**.
+
+| Phase | State |
+|-------|--------|
+| **P0** Spec & scaffold | **Done** |
+| **P1** Public partials | **Done** |
+| **P2** REST control plane | **Done** |
+
+Consumer wiring, production deploy onto Bray Park Dolibarr, and ops hardening are **out of scope for this repo’s roadmap**. They live in **[roadmap-handover.md](roadmap-handover.md)** for [cloudflare-worker-braypark](https://github.com/ndx-video/cloudflare-worker-braypark) (Astro M1) and church ops.
 
 ---
 
@@ -22,7 +34,7 @@ Progress on the module is recorded in [.progress/](.progress/) (Dot Progress). C
 | Drafts | Unpublished → `404` on public URLs; drafts only via keyed REST |
 | PHP in page content | Public path serves **stored HTML only** — does **not** execute Website PHP |
 
-Stock Dolibarr 22 has **no** Website REST API (`api_website*.class.php` does not exist). This module fills that gap for **read/publish** of partials without forking core or querying Postgres from a sidecar.
+Stock Dolibarr 22 has **no** Website REST API (`api_website*.class.php` does not exist). This module fills that gap with **public published islands** plus a **DOLAPIKEY** site/container control plane — without forking core or querying Postgres from a sidecar.
 
 ---
 
@@ -104,7 +116,7 @@ Public responses SHOULD send cache-friendly headers, e.g.:
 Cache-Control: public, max-age=60, stale-while-revalidate=300
 ```
 
-Exact values are tunable in P1/P4; Worker may add its own cache layer later.
+Exact values are set on the module setup page (`WEBSITEPARTIALS_CACHE_CONTROL`); the Worker may add its own cache layer later.
 
 ### Example (default site)
 
@@ -137,49 +149,25 @@ Auth: `DOLAPIKEY` header (same as other Dolibarr APIs). Login-via-password may b
 
 Path `pages` means **containers** of any `type_container` (`page`, `blogpost`, `menu`, `banner`, `other`, `service`, `library`, `setup`). Permissions are module-owned nested toggles under **Users → Permissions → Website Partials** (`websitepartials/{object}/{read\|write\|delete}`). Core Website UI rights remain separate for volunteers.
 
-Endpoints must appear in `/api/index.php/explorer` when the module is enabled ([REST developer docs](https://wiki.dolibarr.org/index.php/Module_Web_Services_API_REST_(developer))).
+Endpoints appear in `/api/index.php/explorer` when the module is enabled ([REST developer docs](https://wiki.dolibarr.org/index.php/Module_Web_Services_API_REST_(developer))).
 
 ---
 
-## Module layout (implement elsewhere)
+## Module layout (this repo)
 
 ```text
 htdocs/custom/websitepartials/
   README.md
   ChangeLog.md
   core/modules/modWebsitePartials.class.php
+  admin/setup.php                    # public IP allowlist, cache, consumer URLs
   public/partial.php                 # router for .html / .json
   class/api_websitepartials.class.php
-  lib/websitepartials.lib.php        # resolve website ref + pageurl + status
+  lib/websitepartials.lib.php        # resolve website ref + pageurl + status + IP helpers
+  langs/en_US/websitepartials.lang
 ```
 
-Descriptor follows [Module development](https://wiki.dolibarr.org/index.php/Module_development) conventions for an external module under `htdocs/custom/`.
-
----
-
-## Astro consumer alignment
-
-Today the Astro consumer’s `src/lib/content-api.ts` expects:
-
-```text
-GET {CONTENT_API_URL}/islands/{slug}
-→ { id, slug, title, body, updatedAt? }
-```
-
-**P3 target:**
-
-1. Set Worker `CONTENT_API_URL` to the public partials base (or a thin alias that preserves `/islands/{slug}`).
-2. Prefer **`.json`** so `ContentBlock` stays JSON; map `body` as HTML.
-3. Update Astro `ContentIsland.astro` to render `body` as HTML (trusted CMS fragment), not plain text.
-4. Default `website_ref` = `main-website` (env override allowed, e.g. `CONTENT_WEBSITE_REF`).
-
-Suggested fetch shape after wiring:
-
-```text
-{CONTENT_API_URL}/partials/main-website/{slug}.json
-```
-
-or keep `/islands/{slug}` as a rewrite/alias on the Dolibarr or Caddy side so the Astro client stays stable.
+Descriptor follows [Module development](https://wiki.dolibarr.org/index.php/Module_development) conventions for an external module under `htdocs/custom/`. Local module-dev stack: [`dev/`](dev/).
 
 ---
 
@@ -193,7 +181,6 @@ or keep `/islands/{slug}` as a rewrite/alias on the Dolibarr or Caddy side so th
 6. Verify:
    - `…/partials/main-website/welcome.json`
    - `…/partials/main-website/welcome.html`
-7. After Astro P3: confirm the island on [braypark.church](https://braypark.church).
 
 Cognitive load stays on the Website UI; no API keys for volunteers.
 
@@ -205,13 +192,12 @@ Cognitive load stays on the Website UI; no API keys for volunteers.
 
 **Done when:**
 
-- [ ] Module repo (or `custom/websitepartials` tree) exists outside this Astro repo
-- [ ] `modWebsitePartials.class.php` descriptor installs/enables under **Home → Setup → Modules**
-- [ ] Module appears enabled on the Bray Park Dolibarr instance (22.x)
-- [ ] This file (`ROADMAP.md`) is the agreed contract for public + REST surfaces
-- [ ] README points here for module milestones; Astro M1 links to this repo
+- [x] Module repo with `htdocs/custom/websitepartials/` tree ([ndx-video/dolibarr-mod-website-partials](https://github.com/ndx-video/dolibarr-mod-website-partials))
+- [x] `modWebsitePartials.class.php` descriptor installs/enables under **Home → Setup → Modules** (verified on `partials.gandalf.lan`)
+- [x] This file (`ROADMAP.md`) is the agreed contract for public + REST surfaces
+- [x] README points here for module milestones; Astro M1 links to this repo
 
-**Out of scope:** Public HTTP handlers, REST methods, Astro env wiring
+**Out of scope:** Public HTTP handlers, REST methods, Astro env wiring. Production host enablement is consumer/ops work — see [roadmap-handover.md](roadmap-handover.md).
 
 ---
 
@@ -226,62 +212,27 @@ Cognitive load stays on the Website UI; no API keys for volunteers.
 - [x] Missing / unpublished / wrong ref → `404`
 - [x] Page PHP is **not** executed (static `content` only)
 - [x] Sensible `Cache-Control` on successful responses
-- [x] Smoke test against `main-website` with at least one published container (e.g. `welcome`)
+- [x] Smoke test against a published container (e.g. `welcome`) on the module-dev stack / harness
 
-**Out of scope:** REST explorer, Astro production `CONTENT_API_URL`, draft preview URLs
+**Out of scope:** Astro production `CONTENT_API_URL`, draft preview URLs
 
 ---
 
 ## P2 — REST control plane
 
-**Goal:** Keyed health and query APIs for ops and tooling.
+**Goal:** Keyed site + container CRUD for ops and tooling (authoring UX remains Website UI).
 
 **Done when:**
 
-- [ ] `GET /api/index.php/websitepartials/status` with valid `DOLAPIKEY` → `200`
-- [ ] Site CRUD (`GET/POST/PUT/DELETE websites…`) gated by `websitepartials/website/*`
-- [ ] Container CRUD for all `type_container` values, gated per type
-- [ ] `DELETE` page/site works; missing type write → `403`
-- [ ] Invalid/missing key → `401`
-- [ ] Endpoints visible in API explorer
-- [ ] Module rights appear under Users → Permissions
+- [x] `GET /api/index.php/websitepartials/status` with valid `DOLAPIKEY` → `200`
+- [x] Site CRUD (`GET/POST/PUT/DELETE websites…`) gated by `websitepartials/website/*`
+- [x] Container CRUD for all `type_container` values, gated per type
+- [x] `DELETE` page/site works; missing type write → `403`
+- [x] Invalid/missing key → `401`
+- [x] Endpoints visible in API explorer when the module is enabled
+- [x] Module rights appear under Users → Permissions → Website Partials
 
 **Out of scope:** Granting broad ERP rights to the `website` user; public keyed HTML; clone/categories/media
-
----
-
-## P3 — Astro wiring
-
-**Goal:** Live content islands on the Cloudflare Worker from published partials.
-
-**Done when:**
-
-- [ ] `CONTENT_API_URL` set in production (Worker var) to the public partials base or `/islands` alias
-- [ ] Astro `content-api.ts` fetches `.json` (or alias) and maps to `ContentBlock`
-- [ ] Astro `ContentIsland.astro` renders HTML `body` safely as trusted CMS HTML
-- [ ] Error handling / placeholder fallback when the origin is unreachable
-- [ ] At least one real island (`welcome`) served in production — satisfies Astro ROADMAP M1
-
-**Out of scope:** Migrating all static page copy into Dolibarr; removing the beta password gate
-
----
-
-## P4 — Hardening & runbook
-
-**Goal:** Production-ready ops notes and volunteer-safe publishing.
-
-**Done when:**
-
-- [ ] CORS policy documented (Worker server-side fetch may need none; browser fetch must not be required)
-- [ ] Optional edge allowlist / Tunnel notes (Worker → Dolibarr) documented
-- [ ] Rate-limit or abuse notes for the public path
-- [ ] Volunteer runbook (above) copied into module README and linked from church ops docs
-- [ ] Confirm drafts never leak on public URLs
-- [x] Module setup: REST uses global `API_RESTRICT_ON_IP`; public path uses `WEBSITEPARTIALS_PUBLIC_ALLOWED_IPS` (CIDR); consumer URL jump list (convenience only)
-
-**IP split:** REST → Dolibarr `API_RESTRICT_ON_IP` (exact IPs). Public islands → module CIDR allowlist. Consumer URLs on the setup page are jump links only — not a CORS allowlist.
-
-**Out of scope:** Cloudflare Access on public partials; Turnstile
 
 ---
 
@@ -293,6 +244,7 @@ Cognitive load stays on the Website UI; no API keys for volunteers.
 - Executing Website container PHP on the public partials path
 - Replacing the Website module UI with another authoring tool
 - Using Website “Deploy to Apache” as the public site (Astro on Cloudflare remains the site)
+- Astro / Cloudflare Worker consumer wiring (see [roadmap-handover.md](roadmap-handover.md))
 
 ---
 
@@ -300,10 +252,11 @@ Cognitive load stays on the Website UI; no API keys for volunteers.
 
 | Document | Role |
 |----------|------|
-| **This file** (`ROADMAP.md`) | Partials module milestones (P0–P4) and public/REST contracts |
-| [README.md](README.md) | Module overview; expand with install notes as code lands |
-| [AGENTS.md](AGENTS.md) | Agent orientation; P0–P4 ↔ M000–M004 mapping |
+| **This file** (`ROADMAP.md`) | Module milestones **P0–P2** (complete at v1.0) and public/REST contracts |
+| [roadmap-handover.md](roadmap-handover.md) | Consumer + ops work formerly P3/P4 — for the Astro repo / church ops |
+| [README.md](README.md) | Module overview and local-dev notes |
+| [AGENTS.md](AGENTS.md) | Agent orientation; P0–P2 ↔ M000–M002 mapping |
 | [.progress/](.progress/) | Append-only history for work in *this* repo |
-| Astro [ROADMAP.md](https://github.com/ndx-video/cloudflare-worker-braypark/blob/main/ROADMAP.md) | Site milestones; M1 consumes this module at P3 |
+| Astro [ROADMAP.md](https://github.com/ndx-video/cloudflare-worker-braypark/blob/main/ROADMAP.md) | Site milestones; M1 consumes this module |
 
-**Plan in ROADMAP. Record in `.progress/`. Implement the module in this repo. Wire the Astro consumer at P3.**
+**Plan in ROADMAP. Record in `.progress/`. Module v1.0 is complete; further consumer work is handed off.**
