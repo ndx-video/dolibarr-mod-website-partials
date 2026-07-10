@@ -4,7 +4,7 @@ Milestone plan for the **Dolibarr `website-partials` custom module**: surface HT
 
 This file is the planning source of truth for **this repo**. Module PHP is built here and deployed onto the Dolibarr host (`admin.braypark.church` / `api.braypark.church`). The Astro site ([ndx-video/cloudflare-worker-braypark](https://github.com/ndx-video/cloudflare-worker-braypark)) is the **consumer** — see that repo’s `ROADMAP.md` M1 and `src/lib/content-api.ts`.
 
-Progress on the module is recorded in this repo (Dot Progress once adopted). Consumer wiring progress lives in the Astro repo’s `.progress/`.
+Progress on the module is recorded in [.progress/](.progress/) (Dot Progress). Consumer wiring progress lives in the Astro repo’s `.progress/`.
 
 ---
 
@@ -18,7 +18,7 @@ Progress on the module is recorded in this repo (Dot Progress once adopted). Con
 | Slug mapping | Dolibarr `pageurl` = island slug (e.g. `welcome`) |
 | Public islands | **No API key** — published only |
 | Public formats | **Both** `.html` (raw fragment) and `.json` (`{ slug, title, body, updatedAt }`) |
-| REST control plane | **DOLAPIKEY** — health + list/query; no write API in v1 |
+| REST control plane | **DOLAPIKEY** — full site + container CRUD (incl. DELETE); module-owned per-type rights; authoring UX remains Website UI |
 | Drafts | Unpublished → `404` on public URLs; drafts only via keyed REST |
 | PHP in page content | Public path serves **stored HTML only** — does **not** execute Website PHP |
 
@@ -121,14 +121,21 @@ Base: `https://admin.braypark.church/api/index.php/` (or `api.braypark.church`).
 
 Auth: `DOLAPIKEY` header (same as other Dolibarr APIs). Login-via-password may be disabled on this appliance — use a user API key.
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| `GET` | `/websitepartials/status` | Health: module enabled, Dolibarr version, optional DB ping |
-| `GET` | `/websitepartials/websites` | List website refs the caller may see |
-| `GET` | `/websitepartials/websites/{ref}/pages` | List pages (query: `status=published\|all`, pagination) |
-| `GET` | `/websitepartials/websites/{ref}/pages/{slug}` | Metadata (+ optional `content` for drafts when permitted) |
+| Method | Path | Right (`websitepartials/…`) |
+|--------|------|------------------------------|
+| `GET` | `/websitepartials/status` | any module right (or `website/read`) |
+| `GET` | `/websitepartials/websites` | `website/read` |
+| `GET` | `/websitepartials/websites/{ref}` | `website/read` |
+| `POST` | `/websitepartials/websites` | `website/write` |
+| `PUT` | `/websitepartials/websites/{ref}` | `website/write` |
+| `DELETE` | `/websitepartials/websites/{ref}` | `website/delete` |
+| `GET` | `/websitepartials/websites/{ref}/pages` | `{type}/read` (query: `status`, `type`, pagination) |
+| `GET` | `/websitepartials/websites/{ref}/pages/{slug}` | `{type}/read` for that container |
+| `POST` | `/websitepartials/websites/{ref}/pages` | `{type}/write` |
+| `PUT` | `/websitepartials/websites/{ref}/pages/{slug}` | `{type}/write` |
+| `DELETE` | `/websitepartials/websites/{ref}/pages/{slug}` | `{type}/delete` |
 
-**v1:** read-only. No create/update/delete via REST — authoring stays in the Website UI.
+Path `pages` means **containers** of any `type_container` (`page`, `blogpost`, `menu`, `banner`, `other`, `service`, `library`, `setup`). Permissions are module-owned nested toggles under **Users → Permissions → Website Partials** (`websitepartials/{object}/{read\|write\|delete}`). Core Website UI rights remain separate for volunteers.
 
 Endpoints must appear in `/api/index.php/explorer` when the module is enabled ([REST developer docs](https://wiki.dolibarr.org/index.php/Module_Web_Services_API_REST_(developer))).
 
@@ -214,12 +221,12 @@ Cognitive load stays on the Website UI; no API keys for volunteers.
 
 **Done when:**
 
-- [ ] `GET …/partials/{website_ref}/{slug}.html` returns `200` + `text/html` for a published page
-- [ ] `GET …/partials/{website_ref}/{slug}.json` returns the JSON shape above
-- [ ] Missing / unpublished / wrong ref → `404`
-- [ ] Page PHP is **not** executed (static `content` only)
-- [ ] Sensible `Cache-Control` on successful responses
-- [ ] Smoke test against `main-website` with at least one published container (e.g. `welcome`)
+- [x] `GET …/partials/{website_ref}/{slug}.html` returns `200` + `text/html` for a published page
+- [x] `GET …/partials/{website_ref}/{slug}.json` returns the JSON shape above
+- [x] Missing / unpublished / wrong ref → `404`
+- [x] Page PHP is **not** executed (static `content` only)
+- [x] Sensible `Cache-Control` on successful responses
+- [x] Smoke test against `main-website` with at least one published container (e.g. `welcome`)
 
 **Out of scope:** REST explorer, Astro production `CONTENT_API_URL`, draft preview URLs
 
@@ -232,12 +239,14 @@ Cognitive load stays on the Website UI; no API keys for volunteers.
 **Done when:**
 
 - [ ] `GET /api/index.php/websitepartials/status` with valid `DOLAPIKEY` → `200`
-- [ ] List published pages for `main-website` via keyed REST
+- [ ] Site CRUD (`GET/POST/PUT/DELETE websites…`) gated by `websitepartials/website/*`
+- [ ] Container CRUD for all `type_container` values, gated per type
+- [ ] `DELETE` page/site works; missing type write → `403`
 - [ ] Invalid/missing key → `401`
 - [ ] Endpoints visible in API explorer
-- [ ] No write (POST/PUT/DELETE) routes in v1
+- [ ] Module rights appear under Users → Permissions
 
-**Out of scope:** Granting broad ERP rights to the `website` user; public keyed HTML
+**Out of scope:** Granting broad ERP rights to the `website` user; public keyed HTML; clone/categories/media
 
 ---
 
@@ -268,8 +277,11 @@ Cognitive load stays on the Website UI; no API keys for volunteers.
 - [ ] Rate-limit or abuse notes for the public path
 - [ ] Volunteer runbook (above) copied into module README and linked from church ops docs
 - [ ] Confirm drafts never leak on public URLs
+- [x] Module setup: REST uses global `API_RESTRICT_ON_IP`; public path uses `WEBSITEPARTIALS_PUBLIC_ALLOWED_IPS` (CIDR); consumer URL jump list (convenience only)
 
-**Out of scope:** Cloudflare Access on public partials; Turnstile; write REST
+**IP split:** REST → Dolibarr `API_RESTRICT_ON_IP` (exact IPs). Public islands → module CIDR allowlist. Consumer URLs on the setup page are jump links only — not a CORS allowlist.
+
+**Out of scope:** Cloudflare Access on public partials; Turnstile
 
 ---
 
@@ -290,7 +302,8 @@ Cognitive load stays on the Website UI; no API keys for volunteers.
 |----------|------|
 | **This file** (`ROADMAP.md`) | Partials module milestones (P0–P4) and public/REST contracts |
 | [README.md](README.md) | Module overview; expand with install notes as code lands |
+| [AGENTS.md](AGENTS.md) | Agent orientation; P0–P4 ↔ M000–M004 mapping |
+| [.progress/](.progress/) | Append-only history for work in *this* repo |
 | Astro [ROADMAP.md](https://github.com/ndx-video/cloudflare-worker-braypark/blob/main/ROADMAP.md) | Site milestones; M1 consumes this module at P3 |
-| Astro `.progress/` | Consumer wiring history |
 
-**Plan and implement the module in this repo. Wire the Astro consumer at P3.**
+**Plan in ROADMAP. Record in `.progress/`. Implement the module in this repo. Wire the Astro consumer at P3.**
